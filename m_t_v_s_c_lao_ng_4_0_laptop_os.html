@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A's Laptop - Truy cập trái phép</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=VT323&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        os: {
+                            bg: '#050505',
+                            window: 'rgba(15, 15, 18, 0.94)',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            text: '#e2e8f0',
+                            accent: '#d21b24',
+                            matrix: '#00ff41'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Courier Prime', 'monospace'],
+                        glitch: ['VT323', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        #laptop-container {
+            max-width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            background: linear-gradient(to bottom, #11141a, #050505);
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.25;
+        }
+
+        @keyframes bootGlitch {
+            0% { transform: scale(1) translate(0); filter: hue-rotate(0deg); }
+            20% { transform: scale(1.02) translate(1px, -1px); filter: hue-rotate(90deg); }
+            40% { transform: scale(0.99) translate(-1px, 1px); filter: hue-rotate(-90deg); }
+            60% { transform: scale(1.03) translate(1px, 1px); filter: hue-rotate(180deg); opacity: 0.7; }
+            80% { transform: scale(0.97) translate(-1px, -1px); filter: hue-rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) translate(0); filter: hue-rotate(0deg); }
+        }
+        .glitch-text { animation: bootGlitch 0.25s infinite; display: inline-block; color: #d21b24; }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        .battery-blink { animation: blink 1.5s infinite; color: #d21b24; }
+
+        .os-window {
+            position: absolute;
+            top: 5%; left: 5%; width: 90%; height: 80%;
+            background: var(--os-window);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--os-border);
+            border-radius: 12px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            overflow: hidden;
+            transform: scale(0.96);
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+        }
+        .os-window.active {
+            display: flex;
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .window-header {
+            height: 42px;
+            background: rgba(0, 0, 0, 0.6);
+            border-bottom: 1px solid var(--os-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            cursor: default;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 25px;
+            padding: 30px 20px;
+        }
+        .app-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .app-icon:active { transform: scale(0.92); }
+        .app-icon-img {
+            width: 58px; height: 56px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .app-name { font-size: 11px; font-weight: 500; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.9); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+
+        .taskbar {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 45px;
+            background: rgba(8, 8, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 999;
+        }
+
+        .cyber-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #222;
+            color: white;
+            font-family: 'Courier Prime', monospace;
+            font-size: 24px;
+            text-align: center;
+            width: 160px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .cyber-input:focus { border-color: #d21b24; }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.45;
+            margin-bottom: 12px;
+        }
+        .chat-received { background: #222225; border-top-left-radius: 4px; align-self: flex-start; color: #f1f5f9; }
+        .chat-sent { background: #0066cc; border-top-right-radius: 4px; align-self: flex-end; color: white; }
+        .chat-container { display: flex; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+<div id="laptop-container">
+    <div class="scanlines"></div>
+
+    <!-- BOOT SCREEN -->
+    <div id="screen-boot" class="absolute inset-0 bg-black z-[200] flex flex-col items-center justify-center p-6 font-mono text-xs text-green-500 hidden">
+        <div id="boot-text" class="w-full max-w-md"></div>
+    </div>
+
+    <!-- LOCK SCREEN -->
+    <div id="screen-lock" class="absolute inset-0 z-[150] flex flex-col items-center justify-center bg-black/85 backdrop-blur-md fade-in">
+        <div class="w-24 h-24 rounded-full bg-gray-900 flex items-center justify-center mb-6 border-2 border-white/5 shadow-[0_0_40px_rgba(255,255,255,0.05)]">
+            <i class="fa-solid fa-user text-4xl text-gray-400"></i>
+        </div>
+        <h2 class="text-xl font-medium mb-2">Sinh Viên A</h2>
+        <p class="text-sm text-gray-500 mb-8 font-mono">Phiên đăng nhập bị khóa</p>
+        
+        <div class="flex flex-col items-center gap-4">
+            <input type="password" id="pin-input" class="cyber-input" placeholder="PASSCODE" maxlength="4" autocomplete="off">
+            <p id="pin-err" class="text-os-accent text-xs font-mono h-4 opacity-0 transition-opacity">Mật mã không đúng</p>
+            <button onclick="checkPin()" class="mt-2 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full text-sm font-medium transition-colors border border-white/5">
+                MỞ KHÓA
+            </button>
+        </div>
+        <p class="absolute bottom-10 text-[10px] text-gray-600 font-mono text-center w-full">GỢI Ý: Chuyện gì xảy ra vào lúc 02:03 AM?</p>
+    </div>
+
+    <!-- DESKTOP OS -->
+    <div id="screen-desktop" class="absolute inset-0 z-10 hidden flex-col">
+        <div class="absolute inset-0 opacity-15 flex items-center justify-center pointer-events-none">
+            <h1 class="text-[120px] font-glitch text-white opacity-5">OVERWORKED</h1>
+        </div>
+        
+        <!-- OS Notification (Hidden initially) -->
+        <div id="os-notification" class="absolute bottom-16 right-4 w-72 bg-[#1a1a1d]/95 backdrop-blur-md border-l-4 border-red-500 rounded shadow-[0_10px_30px_rgba(0,0,0,0.8)] p-3 transform translate-x-[120%] transition-transform duration-500 z-[200]">
+            <div class="flex justify-between items-start mb-1">
+                <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider"><i class="fa-solid fa-shield-halved mr-1"></i> Security Alert</span>
+                <button onclick="document.getElementById('os-notification').classList.add('translate-x-[120%]')" class="text-gray-500 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[11px] text-gray-300 font-sans leading-relaxed mt-2">
+                Hệ thống ghi nhận 01 lượt quét thẻ RFID khẩn cấp lúc <span class="text-red-400 font-bold">02:03:02</span>.<br><br>
+                Vui lòng dùng công cụ <i class="fa-solid fa-magnifying-glass text-gray-400 mx-1"></i> (Tìm kiếm) dưới Taskbar, nhập <b>HỌ VÀ TÊN</b> nhân chứng để truy vết hồ sơ ẩn.
+            </p>
+        </div>
+
+        <!-- App Grid -->
+        <div class="app-grid">
+            <div class="app-icon" onclick="openWindow('app-chat')">
+                <div class="app-icon-img bg-gradient-to-tr from-blue-600 to-blue-400"><i class="fa-brands fa-facebook-messenger"></i></div>
+                <span class="app-name">Messenger</span>
+            </div>
+            
+            <div class="app-icon" onclick="openWindow('app-files')">
+                <div class="app-icon-img bg-gradient-to-tr from-yellow-600 to-yellow-400"><i class="fa-solid fa-folder-open"></i></div>
+                <span class="app-name">My Files</span>
+            </div>
+
+            <div class="app-icon" onclick="openWindow('app-audio')">
+                <div class="app-icon-img bg-gradient-to-tr from-purple-600 to-purple-400"><i class="fa-solid fa-microphone-lines"></i></div>
+                <span class="app-name">Voice Memos</span>
+            </div>
+
+            <div class="app-icon" onclick="openWindow('app-terminal')">
+                <div class="app-icon-img bg-gradient-to-tr from-gray-900 to-black border-green-500/50 border"><i class="fa-solid fa-terminal text-green-500"></i></div>
+                <span class="app-name text-green-400 font-bold">DECRYPT_OS</span>
+            </div>
+
+            <!-- Hidden Huyen Icon -->
+            <div id="icon-huyen" class="app-icon hidden" onclick="openWindow('app-huyen')">
+                <div class="app-icon-img bg-gradient-to-tr from-red-900 to-black border-red-500 border shadow-[0_0_15px_rgba(210,27,36,0.6)]"><i class="fa-solid fa-user-secret text-red-500"></i></div>
+                <span class="app-name text-red-400 font-bold">LDNH_Log.txt</span>
+            </div>
+        </div>
+
+        <!-- Taskbar -->
+        <div class="taskbar font-mono text-xs">
+            <div class="flex items-center gap-4 text-gray-500">
+                <i class="fa-brands fa-windows text-lg hover:text-white cursor-pointer"></i>
+                <i class="fa-solid fa-magnifying-glass text-lg hover:text-white cursor-pointer" onclick="toggleSearch()" title="Tra cứu dữ liệu học vụ"></i>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Sound Control Hub -->
+                <i class="fa-solid fa-volume-high text-gray-500 hover:text-white cursor-pointer text-sm" onclick="toggleSoundPanel()" title="Bộ trộn âm thanh"></i>
+                <i class="fa-solid fa-wifi text-gray-500"></i>
+                <span class="battery-blink font-bold">1% <i class="fa-solid fa-battery-empty ml-1"></i></span>
+                <span class="font-bold text-gray-400">02:03 AM</span>
+            </div>
+
+            <!-- Ambient Sound Control Center Panel -->
+            <div id="sound-panel" class="absolute bottom-12 right-12 w-72 bg-[#1a1a1d]/95 border border-white/10 rounded-lg p-4 z-[300] hidden shadow-2xl font-mono text-xs text-gray-300">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-red-500">BỘ TRỘN ÂM THANH 2:00 AM</span>
+                    <i class="fa-solid fa-xmark cursor-pointer text-gray-500 hover:text-white" onclick="toggleSoundPanel()"></i>
+                </div>
+                
+                <!-- Ambient Soundscape Switch -->
+                <div class="flex justify-between items-center mb-4">
+                    <span>Môi trường (Mưa & Quạt)</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="ambient-toggle" class="sr-only peer" checked onchange="toggleAmbientAudio()">
+                        <div class="w-9 h-5 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                    </label>
+                </div>
+
+                <!-- Master Volume -->
+                <div class="flex flex-col gap-2 mb-5 border-b border-white/5 pb-4">
+                    <div class="flex justify-between text-[10px] text-gray-400">
+                        <span>Âm lượng Tổng (Master)</span>
+                        <span id="master-vol-value">70%</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-volume-low text-gray-500"></i>
+                        <input type="range" id="master-volume-slider" min="0" max="1" step="0.05" value="0.7" class="flex-grow accent-red-600 h-1 bg-gray-800 rounded-full appearance-none outline-none" oninput="adjustMasterVolume(this.value)">
+                        <i class="fa-solid fa-volume-high text-gray-500"></i>
+                    </div>
+                </div>
+
+                <!-- Kênh âm thanh độc lập -->
+                <p class="text-[9px] uppercase tracking-widest text-gray-500 mb-3 font-bold">Kênh Âm Thanh Độc Lập</p>
+                
+                <!-- Mưa & Gió Volume -->
+                <div class="flex flex-col gap-2 mb-4">
+                    <div class="flex justify-between text-[10px] text-blue-400">
+                        <span>Tiếng Mưa & Gió Rít</span>
+                        <span id="rain-vol-value">12%</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-cloud-rain text-blue-500/50 text-[10px]"></i>
+                        <input type="range" id="rain-volume-slider" min="0" max="0.5" step="0.01" value="0.12" class="flex-grow accent-blue-500 h-1 bg-gray-800 rounded-full appearance-none outline-none" oninput="adjustRainVolume(this.value)">
+                        <i class="fa-solid fa-cloud-showers-heavy text-blue-500 text-[10px]"></i>
+                    </div>
+                </div>
+
+                <!-- Quạt Laptop Volume -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between text-[10px] text-gray-400">
+                        <span>Tiếng Ù Quạt Laptop</span>
+                        <span id="fan-vol-value">28%</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-fan text-gray-600 text-[10px]"></i>
+                        <input type="range" id="fan-volume-slider" min="0" max="1" step="0.01" value="0.28" class="flex-grow accent-gray-400 h-1 bg-gray-800 rounded-full appearance-none outline-none" oninput="adjustFanVolume(this.value)">
+                        <i class="fa-solid fa-fan text-gray-300 text-[10px] animate-spin"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Modal (The Twist Activator) -->
+            <div id="search-modal" class="absolute bottom-12 left-10 w-72 bg-[#1a1a1d] border border-white/10 rounded-lg p-3 z-[300] hidden shadow-2xl">
+                <p class="text-[10px] text-gray-400 mb-2 font-sans uppercase tracking-wider font-bold">Truy vấn CSDL An Ninh</p>
+                <div class="flex gap-2">
+                    <input type="text" id="search-input" class="bg-black border border-white/10 text-white px-3 py-1.5 text-xs outline-none w-full rounded focus:border-red-500 transition-colors" placeholder="Nhập Họ & Tên..." onkeypress="performSearch(event)">
+                    <button onclick="performSearch({key: 'Enter'})" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded text-xs transition-colors"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <p class="text-[9px] text-gray-500 mt-2 italic text-center">Gợi ý: Tìm nhân vật lặp lại ở vị trí số 4 trong các biên bản lời khai, khớp nối với người quét thẻ RFID lúc 02:03:02.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP 1: CHAT MESSENGER -->
+    <div id="app-chat" class="os-window">
+        <div class="window-header">
+            <div class="text-xs font-medium text-gray-300 flex items-center gap-2"><i class="fa-brands fa-facebook-messenger text-blue-500"></i> Messenger</div>
+            <button onclick="closeWindow('app-chat')" class="w-6 h-6 rounded-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-colors text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="window-content flex">
+            <!-- Sidebar Contacts -->
+            <div class="w-1/3 border-r border-white/5 bg-black/40 overflow-y-auto">
+                <div class="p-3 border-b border-white/5 bg-white/5 cursor-pointer" id="side-my" onclick="switchChat('chat-my')">
+                    <div class="text-xs font-bold text-white truncate">My Trendy 👗</div>
+                    <div class="text-[10px] text-gray-500 truncate">Sắp sale nước hoa rồi kìa!</div>
+                </div>
+                <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors" id="side-loi" onclick="switchChat('chat-loi')">
+                    <div class="text-xs font-bold text-white truncate">Sếp Lợi (Midnight Gig)</div>
+                    <div class="text-[10px] text-gray-500 truncate">Tối nay 8 tiếng nhé em.</div>
+                </div>
+                <div class="p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors" id="side-dat" onclick="switchChat('chat-dat')">
+                    <div class="text-xs font-bold text-white truncate">CLB Học Thuật (Nhóm 5)</div>
+                    <div class="text-[10px] text-gray-500 truncate">Đạt: Đêm nay cày nốt Coursera nhé!</div>
+                </div>
+            </div>
+            
+            <!-- Chat View -->
+            <div class="w-2/3 flex flex-col bg-[#0a0a0c]">
+                <div id="chat-my" class="chat-container p-4 h-full overflow-y-auto hidden active-chat">
+                    <div class="text-center text-[10px] text-gray-600 mb-4">03/07/2026 14:30</div>
+                    <div class="chat-bubble chat-received">Ê A ơi, đôi giày đợt này sale hot lắm, mình chốt đơn rồi nè. Bồ mua luôn đi cho có cặp! Mình đi cf check-in.</div>
+                    <div class="chat-bubble chat-sent">Ui đẹp thế, mà tui đang kẹt tiền phòng trọ tháng này My ơi. Hôm bữa mới mua cái ốp lưng với vòng LED (380k) sống ảo hết tiền rồi.</div>
+                    <div class="chat-bubble chat-received">Trời, nợ ví trả sau tí có sao, quẹt đi rồi chụp ảnh post story liền. Đôi giày đó 2.2tr mà mang lên chân flex cực xịn. Nể mặt tui nha, mua xong tui chỉ chỗ nạp gói app chỉnh ảnh Premium 150k mướt rượt luôn.</div>
+                    <div class="chat-bubble chat-received">À sắp tới ra chai nước hoa mini 600k với cái tai nghe không dây 450k đang hot trend rần rần trên Tóp Tóp kìa, mua chung cho đủ bộ đi!</div>
+                    <div class="chat-bubble chat-sent">...Ok để tui quẹt ví PayLater mua trước đống này vậy. Chạy theo đồ xa xỉ với hot trend này làm tui cháy túi mất. Dạo này nợ thẻ tăng cao quá, tui ráng cày đêm bù lại đây.</div>
+                </div>
+
+                <div id="chat-loi" class="chat-container p-4 h-full overflow-y-auto hidden">
+                    <div class="text-center text-[10px] text-gray-600 mb-4">05/07/2026 21:00</div>
+                    <div class="chat-bubble chat-received">A à, đêm nay quán đông khách lắm, ca làm tối nay em tăng từ 4 tiếng lên 8 tiếng (22h - 6h sáng) nhé.</div>
+                    <div class="chat-bubble chat-sent">Dạ sếp, mà ca đêm lương tăng ca có nhân hệ số không anh? Em đang kẹt tiền trả nợ đống đồ mua sắm tháng này quá.</div>
+                    <div class="chat-bubble chat-received">Vẫn tính 20k/h sòng phẳng như hợp đồng thôi em, tạo điều kiện cho em cày kiếm thêm là tốt rồi. Ráng phụ anh đi, than vãn gì nữa.</div>
+                    <div class="chat-bubble chat-sent">Dạ... vâng ạ.</div>
+                </div>
+
+                <div id="chat-dat" class="chat-container p-4 h-full overflow-y-auto hidden">
+                    <div class="text-center text-[10px] text-gray-600 mb-4">Group CLB Học Thuật - 05/07/2026 23:15</div>
+                    <div class="chat-bubble chat-received"><span class="text-blue-400 font-bold text-[10px] block mb-1">Phan Thành Đạt</span>Mọi người đêm nay push nốt khóa Coursera nhé. Gần thi rồi, ráng ngủ 3 tiếng thôi, bỏ 450k ra đăng ký khóa học thì ráng cày để làm đẹp cái CV mốt ra trường mới có giá trị trao đổi cao!</div>
+                    <div class="chat-bubble chat-received"><span class="text-purple-400 font-bold text-[10px] block mb-1">Lê Đặng Nhật Huyên</span>Anh Đạt ép tụi em vừa thôi. A nó đi làm thêm đêm mệt lắm rồi kìa, cho nó thở đi anh! Cái mớ chứng chỉ học vẹt đó đâu giúp được gì thực tế nếu sức khỏe sụp đổ?</div>
+                    <div class="chat-bubble chat-received"><span class="text-blue-400 font-bold text-[10px] block mb-1">Phan Thành Đạt</span>Huyên em im đi, em mờ nhạt trong CLB thì đừng kéo người khác lười theo. A nó tự nguyện cày để giỏi, đúng không A?</div>
+                    <div class="chat-bubble chat-sent">Dạ em ráng cày được ạ. Khóa Coursera này thực sự cần cho môn chuyên ngành sắp tới, để em mở lap lên...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP 2: FILES EXPLORER -->
+    <div id="app-files" class="os-window">
+        <div class="window-header">
+            <div class="text-xs font-medium text-gray-300 flex items-center gap-2"><i class="fa-solid fa-folder-open text-yellow-500"></i> My Files</div>
+            <button onclick="closeWindow('app-files')" class="w-6 h-6 rounded-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-colors text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="window-content p-4 bg-[#111]">
+            <div class="grid grid-cols-4 md:grid-cols-6 gap-4">
+                <div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="openFile('file-excel')">
+                    <i class="fa-solid fa-file-excel text-4xl text-green-600 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[10px] text-center text-gray-400">BangChamCong_ThucTe.xlsx</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 cursor-pointer group" onclick="openFile('file-word')">
+                    <i class="fa-solid fa-file-word text-4xl text-blue-600 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[10px] text-center text-gray-400">BT_MLN122_G_c_v_m.docx</span>
+                </div>
+            </div>
+
+            <!-- File Viewer Overlay -->
+            <div id="file-viewer" class="absolute inset-0 bg-[#0a0a0a] z-50 hidden flex-col">
+                <div class="h-8 bg-gray-800 flex items-center justify-between px-3">
+                    <span id="fv-title" class="text-[10px] font-mono text-gray-300">Viewing...</span>
+                    <button onclick="closeFile()" class="text-white hover:text-red-500"><i class="fa-solid fa-chevron-down text-xs"></i></button>
+                </div>
+                <div id="fv-content" class="flex-1 overflow-y-auto p-4 text-xs font-mono bg-white text-black">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP 3: VOICE MEMOS -->
+    <div id="app-audio" class="os-window">
+        <div class="window-header">
+            <div class="text-xs font-medium text-gray-300 flex items-center gap-2"><i class="fa-solid fa-microphone-lines text-purple-500"></i> Voice Memos</div>
+            <button onclick="closeWindow('app-audio')" class="w-6 h-6 rounded-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-colors text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="window-content p-4 bg-[#1a1a1d] flex flex-col gap-4">
+            <div class="bg-black/50 p-4 rounded-xl border border-white/5 flex flex-col gap-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="text-xs font-bold text-white uppercase tracking-wider">Bản ghi mới 5.m4a</h4>
+                        <span class="text-[10px] text-gray-500">06/07/2026 - 02:00 AM</span>
+                    </div>
+                    <span class="px-2 py-1 bg-red-500/20 text-red-500 rounded text-[9px] font-bold">LỜI TRĂN TRỐI?</span>
+                </div>
+                
+                <!-- Audio Target element -->
+                <audio id="victim-audio">
+                    <source src="Bản ghi mới 5.m4a" type="audio/mp4">
+                    Trình duyệt không hỗ trợ.
+                </audio>
+
+                <!-- Custom Styled Forensic Media Player -->
+                <div class="flex items-center gap-4 bg-black/40 p-3 rounded-lg border border-white/5">
+                    <button id="audio-play-btn" class="w-10 h-10 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
+                    <div class="flex-1 flex flex-col gap-1">
+                        <div class="h-1 bg-gray-800 rounded-full cursor-pointer relative" id="audio-progress-container">
+                            <div class="h-full bg-red-600 rounded-full w-0" id="audio-progress-bar"></div>
+                        </div>
+                        <div class="flex justify-between text-[9px] text-gray-500 font-mono">
+                            <span id="audio-current-time">00:00</span>
+                            <span id="audio-total-time">00:00</span>
+                        </div>
+                    </div>
+                    <!-- Audio Mute & Volume Slider -->
+                    <div class="flex items-center gap-2">
+                        <button id="audio-mute-btn" class="text-gray-400 hover:text-white text-xs">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                        <input type="range" id="audio-volume-slider" min="0" max="1" step="0.05" value="1" class="w-16 accent-red-600 h-1 rounded-full cursor-pointer bg-gray-800">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP 4: DECRYPT OS (TERMINAL) -->
+    <div id="app-terminal" class="os-window">
+        <div class="window-header !bg-black border-b-green-900">
+            <div class="text-xs font-bold text-green-500 font-mono"><i class="fa-solid fa-terminal"></i> HỆ THỐNG GIẢI MÃ PHÁP Y SỐ</div>
+            <button onclick="closeWindow('app-terminal')" class="w-6 h-6 rounded-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-colors text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="window-content bg-black p-6 font-mono text-green-500 text-xs md:text-sm">
+            
+            <div id="term-intro" class="mb-6">
+                <p>Khởi chạy giao thức giải mã pháp y...</p>
+                <p class="text-gray-400 mt-2">Nhiệm vụ của thám tử: Vận dụng lý thuyết MLN122, kết hợp hồ sơ giấy được phát và dữ liệu số trên laptop này để mở khóa 3 tầng sự thật.</p>
+            </div>
+
+            <!-- Puzzle 1 -->
+            <div id="puzzle-1" class="border border-green-900 p-4 mb-4 bg-green-900/10">
+                <h3 class="font-bold text-white mb-2">[TẦNG 1]: BẪY THẶNG DƯ TỐI ĐA</h3>
+                <p class="mb-2 text-gray-400">Tham chiếu Bảng chấm công thực tế. A làm 8 tiếng (t=8) nhưng tiền công chỉ bằng 2 tiếng (v=2).</p>
+                <p class="mb-3 text-yellow-400">> Nhập Tỷ suất Bóc lột m' (%) của Sếp Lợi:</p>
+                <div class="flex gap-2">
+                    <input type="text" id="ans-1" class="bg-black border border-green-500 text-green-500 px-2 py-1 w-24 outline-none" autocomplete="off">
+                    <button onclick="checkPuzzle(1)" class="bg-green-800/40 hover:bg-green-700/60 px-4 py-1 rounded transition-colors">GHI ĐÈ</button>
+                </div>
+                <p id="err-1" class="text-red-500 mt-2 hidden">LỖI: Giá trị không khớp thuật toán.</p>
+                <p id="succ-1" class="text-blue-400 mt-2 hidden font-bold">MỞ KHÓA TẦNG 1 THÀNH CÔNG.</p>
+            </div>
+
+            <!-- Puzzle 2 (Locked initially, now with HARD HINT) -->
+            <div id="puzzle-2" class="border border-green-900 p-4 mb-4 bg-green-900/10 opacity-30 pointer-events-none transition-opacity duration-500">
+                <h3 class="font-bold text-white mb-2">[TẦNG 2]: ĐỊNH GIÁ NHU CẦU ẢO</h3>
+                <p class="mb-2 text-gray-400">Tham chiếu sao kê Ví trả sau PayLater và hóa đơn bị ố mực. Áp dụng lý thuyết hàng hóa để bóc tách Nhu cầu thực (duy trì sinh tồn) và Nhu cầu ảo (tiêu dùng hiển thị / giá trị trao đổi cơ học).</p>
+                <p class="mb-3 text-yellow-400">> Tổng số tiền (VNĐ) bị lãng phí cho các nhu cầu ảo là bao nhiêu?</p>
+                <div class="flex gap-2 w-full md:w-2/3">
+                    <input type="text" id="ans-2" class="bg-black border border-green-500 text-green-500 px-2 py-1 flex-1 outline-none" placeholder="Nhập số tiền VNĐ..." autocomplete="off">
+                    <button onclick="checkPuzzle(2)" class="bg-green-800/40 hover:bg-green-700/60 px-4 py-1 rounded transition-colors">GHI ĐÈ</button>
+                </div>
+                <p id="err-2" class="text-red-500 mt-2 hidden">LỖI: Giá trị thống kê không chính xác.</p>
+                <p id="succ-2" class="text-blue-400 mt-2 hidden font-bold">MỞ KHÓA TẦNG 2 THÀNH CÔNG.</p>
+            </div>
+
+            <!-- Puzzle 3 (Locked initially) -->
+            <div id="puzzle-3" class="border border-green-900 p-4 mb-4 bg-green-900/10 opacity-30 pointer-events-none transition-opacity duration-500">
+                <h3 class="font-bold text-white mb-2">[TẦNG 3]: ĐỨT GÃY HỆ THỐNG</h3>
+                <p class="mb-2 text-gray-400">Ép thức đêm cày chứng chỉ để tăng "giá trị trao đổi" cơ học đã phá hủy hoàn toàn quá trình sinh lý nào của cơ thể A?</p>
+                <p class="mb-3 text-yellow-400">> Viết liền, không dấu, in hoa (VD: GIATRISUDUNG):</p>
+                <div class="flex gap-2">
+                    <input type="text" id="ans-3" class="bg-black border border-green-500 text-green-500 px-2 py-1 flex-1 outline-none uppercase" autocomplete="off">
+                    <button onclick="checkPuzzle(3)" class="bg-green-800/40 hover:bg-green-700/60 px-4 py-1 rounded transition-colors">GHI ĐÈ</button>
+                </div>
+                <p id="err-3" class="text-red-500 mt-2 hidden">LỖI: Từ khóa lý luận không chính xác.</p>
+                <p id="succ-3" class="text-blue-400 mt-2 hidden font-bold">MỞ KHÓA TẦNG 3 THÀNH CÔNG.</p>
+            </div>
+
+            <!-- Final Verdict Panel -->
+            <div id="final-verdict" class="hidden mt-8 border-2 border-red-600 p-4 bg-red-900/20">
+                <h2 class="text-red-500 font-bold text-lg mb-4 glitch-text">HỆ THỐNG ĐÃ MỞ: BẢN ÁN CHUNG CUỘC</h2>
+                <p class="mb-4 text-white">Bạn đã thấy hết mọi góc khuất. Theo bạn, tác nhân nào chiếm bao nhiêu % tội ác trong việc bòn rút sức lao động của A?</p>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="flex justify-between text-yellow-400 mb-1"><span>Vũ Thế Lợi (Bẫy Thặng Dư)</span> <span id="val-loi">33%</span></label>
+                        <input type="range" id="slider-loi" min="0" max="100" value="33" class="w-full accent-red-500" oninput="updateSliders('loi')">
+                    </div>
+                    <div>
+                        <label class="flex justify-between text-blue-400 mb-1"><span>My Trendy (Nhu Cầu Ảo)</span> <span id="val-my">33%</span></label>
+                        <input type="range" id="slider-my" min="0" max="100" value="33" class="w-full" oninput="updateSliders('my')">
+                    </div>
+                    <div>
+                        <label class="flex justify-between text-purple-400 mb-1"><span>Đạt Coursera (Giá Trị Trao Đổi)</span> <span id="val-dat">34%</span></label>
+                        <input type="range" id="slider-dat" min="0" max="100" value="34" class="w-full" oninput="updateSliders('dat')">
+                    </div>
+                    <!-- Hidden twist slider for Huyen -->
+                    <div id="huyen-slider-container" class="hidden mt-4 pt-4 border-t border-red-500/30">
+                        <label class="flex justify-between text-red-400 mb-1"><span class="font-bold">L.Đ. Nhật Huyên (Nhân chứng Ẩn)</span> <span id="val-huyen">0%</span></label>
+                        <input type="range" id="slider-huyen" min="0" max="100" value="0" class="w-full accent-red-600" oninput="updateSliders('huyen')">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center border-t border-red-500/50 pt-4">
+                    <span class="text-gray-400">TỔNG CỘNG: <span id="val-total" class="font-bold text-green-500">100%</span></span>
+                    <button onclick="submitVerdict()" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded shadow-[0_0_15px_rgba(210,27,36,0.6)]">THỰC THI PHÁN QUYẾT</button>
+                </div>
+            </div>
+            
+            <div class="h-20"></div> <!-- padding bottom -->
+        </div>
+    </div>
+
+    <!-- APP 5: HIDDEN TWIST (HUYEN'S LOG) -->
+    <div id="app-huyen" class="os-window">
+        <div class="window-header !bg-[#2a0808]">
+            <div class="text-xs font-medium text-red-400 flex items-center gap-2"><i class="fa-solid fa-user-secret"></i> Lời_Khai_Ẩn_LDNH.txt</div>
+            <button onclick="closeWindow('app-huyen')" class="w-6 h-6 rounded-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-colors text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="window-content p-6 bg-[#0a0a0a] text-red-100 font-mono text-xs leading-relaxed">
+            <h3 class="text-red-500 font-bold mb-4 text-center text-lg glitch-text">GHI CHÉP CỦA LÊ ĐẶNG NHẬT HUYÊN</h3>
+            <p class="mb-4">Tôi biết các người sẽ tìm thấy tôi. Chẳng có gì là bí mật cả, chỉ là mọi người quá mải mê đuổi theo những thứ bề nổi mà bỏ quên những kẻ đứng trong góc khuất.</p>
+            <p class="mb-4">Tôi là thành viên CLB Học thuật của anh Đạt, là bạn trong nhóm của My, và cũng từng làm thêm ca đêm ở Midnight Gig của chú Lợi. Tôi có mặt ở mọi nơi, nhưng vô hình.</p>
+            <p class="mb-4">Một năm trước, tôi cũng từng kiệt quệ y như A bây giờ. Tôi đã cố cảnh báo anh Đạt đừng ép A học nữa. Tôi đã nhắc My bớt rủ rê A đi tiêu tiền vay app. Nhưng không ai nghe. Tôi quá "mờ nhạt" để được chú ý.</p>
+            <p class="mb-4">Đêm qua (06/07), tôi cũng có mặt ở thư viện. Chính tôi là người đã quét thẻ RFID khẩn cấp báo động lúc <span class="font-bold text-red-400">02:03 sáng</span> khi thấy A gục xuống mặt bàn.</p>
+            <p class="font-bold text-white border-l-4 border-red-500 pl-3 mt-6">"Đừng buộc tội tôi. Tôi không phải là hung thủ. Tôi là nạn nhân song song, một phiên bản khác của A. Hãy nhìn rộng ra, kẻ bóp nghẹt chúng tôi không mang hình hài con người..."</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // System State
+    const state = {
+        locked: true,
+        p1: false,
+        p2: false,
+        p3: false,
+        twistFound: false
+    };
+
+    const answers = {
+        p1: ["300", "300%"],
+        p2: ["3780000", "3.780.000", "3780"],
+        p3: ["TAITAOSUCLAODONG"]
+    };
+
+    // System Audio & Synthesizer State
+    let ambientCtx = null;
+    let masterGainNode = null;
+    let rainGainNode = null;
+    let fanGainNode = null;
+    let breathGainNode = null;
+    let isAmbientPlaying = false;
+
+    // Custom Synthesizer noise buffer generation
+    function generateNoise(ctx, type) {
+        const sampleRate = ctx.sampleRate;
+        const bufferSize = 2 * sampleRate;
+        const buffer = ctx.createBuffer(1, bufferSize, sampleRate);
+        const data = buffer.getChannelData(0);
+        let lastOut = 0.0;
+        
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            if (type === 'brown') {
+                data[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = data[i];
+                data[i] *= 3.5; // Gain compensation
+            } else {
+                data[i] = white;
+            }
+        }
+        return buffer;
+    }
+
+    // Initialize Web Audio Synthesis for Spooky Ambience
+    function startAmbientSoundscape() {
+        try {
+            if (!ambientCtx) {
+                ambientCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (ambientCtx.state === 'suspended') {
+                ambientCtx.resume();
+            }
+
+            // Master Volume Node connection
+            masterGainNode = ambientCtx.createGain();
+            const initVol = parseFloat(document.getElementById('master-volume-slider').value);
+            masterGainNode.gain.setValueAtTime(initVol, ambientCtx.currentTime);
+            masterGainNode.connect(ambientCtx.destination);
+
+            const whiteNoise = generateNoise(ambientCtx, 'white');
+            const brownNoise = generateNoise(ambientCtx, 'brown');
+
+            // 1. Rain (White noise + bandpass)
+            const rainSource = ambientCtx.createBufferSource();
+            rainSource.buffer = whiteNoise;
+            rainSource.loop = true;
+            const rainFilter = ambientCtx.createBiquadFilter();
+            rainFilter.type = 'bandpass';
+            rainFilter.frequency.setValueAtTime(850, ambientCtx.currentTime);
+            rainFilter.Q.setValueAtTime(1.2, ambientCtx.currentTime);
+            rainGainNode = ambientCtx.createGain();
+            const initRainVol = parseFloat(document.getElementById('rain-volume-slider').value);
+            rainGainNode.gain.setValueAtTime(initRainVol, ambientCtx.currentTime); // Dynamic background storm
+
+            rainSource.connect(rainFilter);
+            rainFilter.connect(rainGainNode);
+            rainGainNode.connect(masterGainNode);
+            rainSource.start(0);
+
+            // 2. Laptop Fan Rumble (Brown noise + lowpass)
+            const fanSource = ambientCtx.createBufferSource();
+            fanSource.buffer = brownNoise;
+            fanSource.loop = true;
+            const fanFilter = ambientCtx.createBiquadFilter();
+            fanFilter.type = 'lowpass';
+            fanFilter.frequency.setValueAtTime(140, ambientCtx.currentTime);
+            fanGainNode = ambientCtx.createGain();
+            const initFanVol = parseFloat(document.getElementById('fan-volume-slider').value);
+            fanGainNode.gain.setValueAtTime(initFanVol, ambientCtx.currentTime);
+
+            fanSource.connect(fanFilter);
+            fanFilter.connect(fanGainNode);
+            fanGainNode.connect(masterGainNode);
+            fanSource.start(0);
+
+            // 3. Spooky Slow Breathing
+            const breathSource = ambientCtx.createBufferSource();
+            breathSource.buffer = whiteNoise;
+            breathSource.loop = true;
+            const breathFilter = ambientCtx.createBiquadFilter();
+            breathFilter.type = 'lowpass';
+            breathFilter.frequency.setValueAtTime(300, ambientCtx.currentTime);
+            breathGainNode = ambientCtx.createGain();
+            breathGainNode.gain.setValueAtTime(0.08, ambientCtx.currentTime);
+
+            const breathLFO = ambientCtx.createOscillator();
+            breathLFO.type = 'sine';
+            breathLFO.frequency.setValueAtTime(0.2, ambientCtx.currentTime); // Slow 5-second breathing cycle
+            const lfoGain = ambientCtx.createGain();
+            lfoGain.gain.setValueAtTime(220, ambientCtx.currentTime);
+
+            breathLFO.connect(lfoGain);
+            lfoGain.connect(breathFilter.frequency);
+
+            breathSource.connect(breathFilter);
+            breathFilter.connect(breathGainNode);
+            breathGainNode.connect(masterGainNode);
+
+            breathLFO.start(0);
+            breathSource.start(0);
+
+            isAmbientPlaying = true;
+            document.getElementById('ambient-toggle').checked = true;
+        } catch(e) {
+            console.error('AudioContext start error:', e);
+        }
+    }
+
+    function stopAmbientSoundscape() {
+        if (ambientCtx) {
+            ambientCtx.suspend();
+        }
+        isAmbientPlaying = false;
+        document.getElementById('ambient-toggle').checked = false;
+    }
+
+    function toggleAmbientAudio() {
+        const toggle = document.getElementById('ambient-toggle');
+        if (toggle.checked) {
+            startAmbientSoundscape();
+        } else {
+            stopAmbientSoundscape();
+        }
+    }
+
+    function toggleSoundPanel() {
+        const panel = document.getElementById('sound-panel');
+        panel.classList.toggle('hidden');
+    }
+
+    function adjustMasterVolume(val) {
+        document.getElementById('master-vol-value').innerText = `${Math.round(val * 100)}%`;
+        if (masterGainNode && ambientCtx) {
+            masterGainNode.gain.setValueAtTime(parseFloat(val), ambientCtx.currentTime);
+        }
+    }
+
+    function adjustRainVolume(val) {
+        document.getElementById('rain-vol-value').innerText = `${Math.round(val * 100)}%`;
+        if (rainGainNode && ambientCtx) {
+            rainGainNode.gain.setValueAtTime(parseFloat(val), ambientCtx.currentTime);
+        }
+    }
+
+    function adjustFanVolume(val) {
+        document.getElementById('fan-vol-value').innerText = `${Math.round(val * 100)}%`;
+        if (fanGainNode && ambientCtx) {
+            fanGainNode.gain.setValueAtTime(parseFloat(val), ambientCtx.currentTime);
+        }
+    }
+
+    // Boot Sequence
+    window.onload = () => {
+        const bootText = document.getElementById('boot-text');
+        const lines = [
+            "> Khởi động OS Kernel...",
+            "> Nạp module bộ nhớ [OK]",
+            "> Quét phân vùng đĩa [CẢNH BÁO: Dữ liệu phân mảnh]",
+            "> Đang thiết lập kết nối hiển thị...",
+            "> Bỏ qua giao thức bảo mật sinh trắc học...",
+            "> Yêu cầu mã PIN khẩn cấp."
+        ];
+        
+        document.getElementById('screen-boot').classList.remove('hidden');
+        
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < lines.length) {
+                bootText.innerHTML += `<div>${lines[i]}</div>`;
+                i++;
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    document.getElementById('screen-boot').classList.add('hidden');
+                    document.getElementById('screen-lock').classList.remove('hidden');
+                }, 800);
+            }
+        }, 300);
+    };
+
+    // PIN Logic
+    function checkPin() {
+        const pin = document.getElementById('pin-input').value;
+        const err = document.getElementById('pin-err');
+        if (pin === '0203') {
+            state.locked = false;
+            document.getElementById('screen-lock').classList.add('hidden');
+            document.getElementById('screen-desktop').classList.remove('hidden');
+            document.getElementById('screen-desktop').classList.add('flex');
+            
+            // Play background stormy mindfulness soundtrack automatically!
+            startAmbientSoundscape();
+
+            // Auto open Terminal
+            setTimeout(() => { openWindow('app-terminal'); }, 500);
+
+            // Show OS Notification Hint after 8 seconds of logging in
+            setTimeout(() => {
+                document.getElementById('os-notification').classList.remove('translate-x-[120%]');
+            }, 8000);
+
+        } else {
+            err.style.opacity = 1;
+            setTimeout(() => { err.style.opacity = 0; }, 2000);
+            document.getElementById('pin-input').value = '';
+        }
+    }
+
+    // Window Management
+    let zIndexCounter = 100;
+    function openWindow(id) {
+        const win = document.getElementById(id);
+        win.classList.add('active');
+        win.style.zIndex = ++zIndexCounter;
+        
+        if(id === 'app-chat') {
+            switchChat('chat-my');
+        }
+    }
+
+    function closeWindow(id) {
+        document.getElementById(id).classList.remove('active');
+        if(id === 'app-audio') {
+            document.getElementById('victim-audio').pause();
+            document.getElementById('audio-play-btn').querySelector('i').className = 'fa-solid fa-play';
+        }
+    }
+
+    // Chat Logic
+    function switchChat(chatId) {
+        document.querySelectorAll('.chat-container').forEach(el => el.classList.add('hidden'));
+        document.getElementById('side-my').classList.remove('border-l-2', 'border-blue-500', 'bg-white/5');
+        document.getElementById('side-loi').classList.remove('border-l-2', 'border-blue-500', 'bg-white/5');
+        document.getElementById('side-dat').classList.remove('border-l-2', 'border-blue-500', 'bg-white/5');
+        
+        document.getElementById(chatId).classList.remove('hidden');
+        if(chatId === 'chat-my') document.getElementById('side-my').classList.add('border-l-2', 'border-blue-500', 'bg-white/5');
+        if(chatId === 'chat-loi') document.getElementById('side-loi').classList.add('border-l-2', 'border-blue-500', 'bg-white/5');
+        if(chatId === 'chat-dat') document.getElementById('side-dat').classList.add('border-l-2', 'border-blue-500', 'bg-white/5');
+    }
+
+    // Twist Search Engine Logic
+    function toggleSearch() {
+        const modal = document.getElementById('search-modal');
+        modal.classList.toggle('hidden');
+        if(!modal.classList.contains('hidden')){
+            document.getElementById('search-input').focus();
+        }
+    }
+
+    function removeVietnameseTones(str) {
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
+        str = str.replace(/đ/g,"d");
+        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+        str = str.replace(/Đ/g, "D");
+        return str;
+    }
+
+    function performSearch(e) {
+        if(e && e.key !== 'Enter') return;
+        const val = document.getElementById('search-input').value;
+        const normalized = removeVietnameseTones(val).replace(/\s+/g, '').toUpperCase();
+        
+        if(normalized === 'LEDANGNHATHUYEN' || normalized === 'NHATHUYEN') {
+            document.getElementById('search-modal').classList.add('hidden');
+            document.getElementById('search-input').value = '';
+            
+            if(!state.twistFound) {
+                state.twistFound = true;
+                // Reveal Icon and Slider
+                document.getElementById('icon-huyen').classList.remove('hidden');
+                document.getElementById('huyen-slider-container').classList.remove('hidden');
+                
+                showSystemAlert("[🔓 ĐÃ MỞ KHÓA TẦNG ẨN: NHÂN CHỨNG THỨ 4]\n\nTruy vấn CSDL thành công. Phát hiện 01 cá nhân có mặt trong tất cả các hồ sơ nhưng không để lại dấu vết. \n\nĐã trích xuất Lời Khai Ẩn lên Desktop.");
+            } else {
+                openWindow('app-huyen');
+            }
+        } else {
+            showSystemAlert("Không tìm thấy dữ liệu khớp với truy vấn: " + val);
+        }
+    }
+
+    function showSystemAlert(msg) {
+        const alertBox = document.createElement('div');
+        alertBox.className = 'fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4';
+        alertBox.innerHTML = `
+            <div class="bg-[#111] border-2 border-red-500 max-w-sm p-6 text-center font-mono shadow-[0_0_30px_rgba(210,27,36,0.3)]">
+                <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500 mb-4 glitch-text"></i>
+                <h3 class="text-white font-bold mb-4">THÔNG BÁO HỆ THỐNG</h3>
+                <p class="text-green-400 text-sm whitespace-pre-line mb-6 text-left border-t border-b border-gray-700 py-4">${msg}</p>
+                <button onclick="this.parentElement.parentElement.remove()" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded transition-colors font-bold">ĐÓNG</button>
+            </div>
+        `;
+        document.body.appendChild(alertBox);
+    }
+
+    // File Explorer Logic
+    const fileContents = {
+        'file-excel': `
+            <table class="w-full text-left border-collapse">
+                <tr class="bg-gray-200 border-b border-gray-400"><th class="p-2">Ngày</th><th class="p-2">Check-in</th><th class="p-2">Check-out</th><th class="p-2">Tổng giờ</th><th class="p-2">Lương quy đổi</th></tr>
+                <tr class="border-b border-gray-300"><td class="p-2">29/06</td><td class="p-2">22:00</td><td class="p-2">06:00</td><td class="p-2 text-red-600 font-bold">8h</td><td class="p-2">40.000đ (2h)</td></tr>
+                <tr class="border-b border-gray-300"><td class="p-2">01/07</td><td class="p-2">22:00</td><td class="p-2">06:00</td><td class="p-2 text-red-600 font-bold">8h</td><td class="p-2">40.000đ (2h)</td></tr>
+                <tr class="border-b border-gray-300"><td class="p-2">03/07</td><td class="p-2">22:00</td><td class="p-2">06:00</td><td class="p-2 text-red-600 font-bold">8h</td><td class="p-2">40.000đ (2h)</td></tr>
+            </table>
+            <p class="mt-4 text-red-600 font-bold">*Lưu ý Sếp Lợi: Giữ nguyên bảng lương gốc nộp công an là 4h/ca. Bảng thực tế 8h này giấu kỹ.</p>
+        `,
+        'file-word': `
+            <h2 class="text-lg font-bold text-center mb-4">TIỂU LUẬN MLN122</h2>
+            <p class="font-bold mb-2">Đề bài: Phân tích quá trình tái sản xuất sức lao động.</p>
+            <p class="mb-4">Sức lao động là một hàng hóa đặc biệt. Giá trị của nó được đo bằng thời gian lao động xã hội cần thiết để duy trì và tái tạo sức lao động đó...</p>
+            <p class="mb-4">Công thức giá trị hàng hóa: G = c + v + m</p>
+            <p class="mb-4">Nếu người bán sức lao động không được nghỉ ngơi đầy đủ, quá trình tái tạo sẽ bị phá vỡ, dẫn tới sụp đổ sinh học...</p>
+            <p class="italic text-red-600 mt-8 border-t border-gray-300 pt-4">"Tôi đã bán hết..."</p>
+            <p class="text-[10px] text-gray-500">(File sửa đổi lần cuối: 06/07/2026 - 01:58 AM)</p>
+        `
+    };
+
+    function openFile(fileId) {
+        document.getElementById('fv-title').innerText = fileId === 'file-excel' ? 'BangChamCong_ThucTe.xlsx' : 'BT_MLN122_G_c_v_m.docx';
+        document.getElementById('fv-content').innerHTML = fileContents[fileId];
+        document.getElementById('file-viewer').classList.remove('hidden');
+        document.getElementById('file-viewer').classList.add('flex');
+    }
+
+    function closeFile() {
+        document.getElementById('file-viewer').classList.add('hidden');
+        document.getElementById('file-viewer').classList.remove('flex');
+    }
+
+    // Puzzle Logic
+    function checkPuzzle(num) {
+        const val = document.getElementById(`ans-${num}`).value.trim().toUpperCase();
+        const err = document.getElementById(`err-${num}`);
+        const succ = document.getElementById(`succ-${num}`);
+        
+        let isCorrect = false;
+        if (num === 1 && answers.p1.includes(val)) isCorrect = true;
+        if (num === 2 && answers.p2.includes(val)) isCorrect = true;
+        if (num === 3 && val === answers.p3[0]) isCorrect = true;
+
+        if (isCorrect) {
+            state[`p${num}`] = true;
+            err.classList.add('hidden');
+            succ.classList.remove('hidden');
+            document.getElementById(`ans-${num}`).disabled = true;
+            
+            // Unlock next puzzle
+            if (num === 1) {
+                document.getElementById('puzzle-2').classList.remove('opacity-30', 'pointer-events-none');
+            } else if (num === 2) {
+                document.getElementById('puzzle-3').classList.remove('opacity-30', 'pointer-events-none');
+            } else if (num === 3) {
+                document.getElementById('final-verdict').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('app-terminal').querySelector('.window-content').scrollTop = 1000;
+                }, 100);
+            }
+        } else {
+            err.classList.remove('hidden');
+        }
+    }
+
+    // Sliders Logic (Must sum to 100)
+    function updateSliders(changedId) {
+        const keys = state.twistFound ? ['loi', 'my', 'dat', 'huyen'] : ['loi', 'my', 'dat'];
+        const values = {};
+        let sum = 0;
+
+        keys.forEach(k => {
+            values[k] = parseInt(document.getElementById(`slider-${k}`).value);
+            sum += values[k];
+        });
+
+        if (sum > 100) {
+            const diff = sum - 100;
+            const otherKeys = keys.filter(k => k !== changedId);
+            let deduction = Math.floor(diff / otherKeys.length);
+            
+            otherKeys.forEach((k) => {
+                if (values[k] >= deduction) {
+                    values[k] -= deduction;
+                } else {
+                    values[k] = 0;
+                }
+                document.getElementById(`slider-${k}`).value = values[k];
+            });
+        }
+        
+        sum = 0;
+        keys.forEach(k => {
+            let v = parseInt(document.getElementById(`slider-${k}`).value);
+            document.getElementById(`val-${k}`).innerText = v + '%';
+            sum += v;
+        });
+        
+        const totalEl = document.getElementById('val-total');
+        totalEl.innerText = sum + '%';
+        if (sum === 100) totalEl.classList.replace('text-red-500', 'text-green-500');
+        else totalEl.classList.replace('text-green-500', 'text-red-500');
+    }
+
+    function submitVerdict() {
+        const totalEl = document.getElementById('val-total').innerText;
+        if (totalEl !== '100%') {
+            alert('Tổng phần trăm phải đúng bằng 100% để thực thi!');
+            return;
+        }
+        
+        let huyenVal = state.twistFound ? parseInt(document.getElementById('slider-huyen').value) : 0;
+        
+        let msg = "";
+        if (huyenVal >= 40) {
+            msg = "[BAD ENDING: CUỘC SĂN PHÙ THỦY]\n\nBạn đã đổ lỗi cho một nạn nhân vô tội khác chỉ vì sự hiện diện bí ẩn của cô ấy. Bản chất bóc lột của thuật toán và hệ thống vẫn được an toàn.";
+        } else {
+            msg = "[THẨM PHÁN TỐI CAO ĐANG KẾT NỐI...]\n\nPhán quyết của bạn đã được ghi nhận. Hãy nhìn lên bục giảng để nghe công bố phân tích học thuật từ Giảng viên (Thẩm phán) của bạn.";
+        }
+
+        showSystemAlert(msg);
+    }
+
+    // Media Player Custom Controller Events
+    const victimAudio = document.getElementById('victim-audio');
+    const audioPlayBtn = document.getElementById('audio-play-btn');
+    const audioPlayIcon = audioPlayBtn.querySelector('i');
+    const audioProgressBar = document.getElementById('audio-progress-bar');
+    const audioProgressContainer = document.getElementById('audio-progress-container');
+    const audioCurrentTimeText = document.getElementById('audio-current-time');
+    const audioTotalTimeText = document.getElementById('audio-total-time');
+    const audioMuteBtn = document.getElementById('audio-mute-btn');
+    const audioMuteIcon = audioMuteBtn.querySelector('i');
+    const audioVolumeSlider = document.getElementById('audio-volume-slider');
+
+    function formatSecs(secs) {
+        if (isNaN(secs)) return "00:00";
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = Math.floor(secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    victimAudio.addEventListener('loadedmetadata', () => {
+        audioTotalTimeText.innerText = formatSecs(victimAudio.duration);
+    });
+
+    // Fallback if metadata loads too fast
+    if (victimAudio.readyState >= 1) {
+        audioTotalTimeText.innerText = formatSecs(victimAudio.duration);
+    }
+
+    audioPlayBtn.addEventListener('click', () => {
+        // Suspend ambient sound context briefly if user plays the voice memo
+        if (victimAudio.paused) {
+            victimAudio.play();
+            audioPlayIcon.className = 'fa-solid fa-pause';
+            // Auto lower ambient sound context during speech
+            if (masterGainNode && ambientCtx) {
+                masterGainNode.gain.setValueAtTime(0.2, ambientCtx.currentTime);
+                document.getElementById('master-volume-slider').value = 0.2;
+                document.getElementById('master-vol-value').innerText = "20%";
+            }
+        } else {
+            victimAudio.pause();
+            audioPlayIcon.className = 'fa-solid fa-play';
+            // Auto restore ambient sound
+            if (masterGainNode && ambientCtx) {
+                masterGainNode.gain.setValueAtTime(0.7, ambientCtx.currentTime);
+                document.getElementById('master-volume-slider').value = 0.7;
+                document.getElementById('master-vol-value').innerText = "70%";
+            }
+        }
+    });
+
+    victimAudio.addEventListener('timeupdate', () => {
+        const percent = (victimAudio.currentTime / victimAudio.duration) * 100;
+        audioProgressBar.style.width = `${percent || 0}%`;
+        audioCurrentTimeText.innerText = formatSecs(victimAudio.currentTime);
+    });
+
+    audioProgressContainer.addEventListener('click', (e) => {
+        const rect = audioProgressContainer.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        victimAudio.currentTime = percent * victimAudio.duration;
+    });
+
+    audioVolumeSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        victimAudio.volume = val;
+        if (val === 0) {
+            audioMuteIcon.className = 'fa-solid fa-volume-xmark text-red-500';
+        } else {
+            audioMuteIcon.className = 'fa-solid fa-volume-high';
+        }
+    });
+
+    audioMuteBtn.addEventListener('click', () => {
+        victimAudio.muted = !victimAudio.muted;
+        if (victimAudio.muted) {
+            audioMuteIcon.className = 'fa-solid fa-volume-xmark text-red-500';
+        } else {
+            audioMuteIcon.className = 'fa-solid fa-volume-high';
+        }
+    });
+</script>
+
+</body>
+</html>
