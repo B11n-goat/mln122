@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/((?!.*\\..*).*)",
-      "destination": "/index.html"
+      "destination": "/m_t_v_s_c_lao_ng_4_0_laptop_os.html"
     }
   ]
 }
